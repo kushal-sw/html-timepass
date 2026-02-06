@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time.exe - Error Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            height: 100vh;
+            background: linear-gradient(180deg, #5A5A5A 0%, #3A3A3A 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            overflow: hidden;
+        }
+
+        .window-container {
+            background: #F0F0F0;
+            border: 1px solid #0078D7;
+            box-shadow: 0 0 0 1px #000,
+                0 4px 8px rgba(0, 0, 0, 0.3),
+                0 8px 20px rgba(0, 0, 0, 0.2);
+            border-radius: 8px 8px 0 0;
+            position: relative;
+        }
+
+        .title-bar {
+            background: linear-gradient(180deg, #0078D7 0%, #0054A6 100%);
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px;
+            border-radius: 8px 8px 0 0;
+            user-select: none;
+        }
+
+        .title-text {
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .title-icon {
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        .window-buttons {
+            display: flex;
+            gap: 4px;
+        }
+
+        .window-btn {
+            width: 20px;
+            height: 20px;
+            background: #E1E1E1;
+            border: 1px solid #999;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .window-btn:hover {
+            background: #EFEFEF;
+        }
+
+        .window-btn.close {
+            background: #E81123;
+            color: white;
+            border-color: #C50F1F;
+        }
+
+        .window-btn.close:hover {
+            background: #F1707A;
+        }
+
+        canvas {
+            display: block;
+            background: #ECE9D8;
+            cursor: default;
+        }
+
+        .status-bar {
+            background: #F0F0F0;
+            border-top: 1px solid #C0C0C0;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            font-size: 11px;
+            color: #000;
+            gap: 6px;
+        }
+
+        .status-icon {
+            color: #C50F1F;
+            font-weight: bold;
+        }
+
+        /* Error Dialog */
+        .error-dialog {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ECE9D8;
+            border: 2px solid #0078D7;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            width: 350px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .error-dialog.show {
+            display: block;
+            animation: errorPop 0.3s ease-out;
+        }
+
+        @keyframes errorPop {
+            0% {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0;
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .error-title-bar {
+            background: linear-gradient(180deg, #0078D7 0%, #0054A6 100%);
+            color: white;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .error-close {
+            background: #E81123;
+            color: white;
+            border: 1px solid #C50F1F;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 2px;
+        }
+
+        .error-content {
+            padding: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+        }
+
+        .error-icon {
+            font-size: 32px;
+        }
+
+        .error-message {
+            flex: 1;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .error-buttons {
+            padding: 0 20px 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .error-btn {
+            background: #E1E1E1;
+            border: 1px solid #999;
+            padding: 6px 20px;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        .error-btn:hover {
+            background: #D1D1D1;
+        }
+
+        .error-btn:active {
+            background: #C1C1C1;
+        }
+
+        /* Funny Close Dialog - Windows XP Style */
+        .close-dialog {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ECE9D8;
+            border: 2px solid #0078D7;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4),
+                0 0 0 1px #000;
+            width: 380px;
+            display: none;
+            z-index: 2000;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .close-dialog.show {
+            display: block;
+            animation: closeDialogPop 0.3s ease-out;
+        }
+
+        @keyframes closeDialogPop {
+            0% {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0;
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .close-dialog.shake {
+            animation: nope 0.4s ease-in-out;
+        }
+
+        @keyframes nope {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            20% {
+                transform: translate(-48%, -50%) rotate(-2deg);
+            }
+
+            40% {
+                transform: translate(-52%, -50%) rotate(2deg);
+            }
+
+            60% {
+                transform: translate(-48%, -50%) rotate(-2deg);
+            }
+
+            80% {
+                transform: translate(-52%, -50%) rotate(2deg);
+            }
+        }
+
+        .close-title-bar {
+            background: linear-gradient(180deg, #0078D7 0%, #0054A6 100%);
+            color: white;
+            padding: 6px 10px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 6px 6px 0 0;
+            user-select: none;
+        }
+
+        .close-title-bar span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .close-dialog-close {
+            background: #E81123;
+            color: white;
+            border: 1px solid #C50F1F;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 3px;
+            transition: background 0.2s;
+        }
+
+        .close-dialog-close:hover {
+            background: #F1707A;
+        }
+
+        .close-content {
+            padding: 25px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            text-align: center;
+            background: #ECE9D8;
+        }
+
+        .close-emoji {
+            font-size: 48px;
+            animation: wobble 1s ease infinite;
+        }
+
+        @keyframes wobble {
+
+            0%,
+            100% {
+                transform: rotate(0deg);
+            }
+
+            25% {
+                transform: rotate(-5deg);
+            }
+
+            50% {
+                transform: rotate(0deg);
+            }
+
+            75% {
+                transform: rotate(5deg);
+            }
+        }
+
+        .close-message {
+            color: #000000;
+            font-size: 14px;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        .close-message .highlight {
+            color: #C50F1F;
+            font-weight: 700;
+        }
+
+        .close-buttons {
+            padding: 0 20px 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            background: #ECE9D8;
+        }
+
+        .close-btn {
+            background: linear-gradient(180deg, #FFFFFF 0%, #E1E1E1 50%, #CFCFCF 100%);
+            border: 1px solid #999;
+            padding: 6px 25px;
+            font-size: 12px;
+            font-weight: 400;
+            cursor: pointer;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            color: #000;
+            border-radius: 3px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            transition: all 0.15s ease;
+        }
+
+        .close-btn:hover {
+            background: linear-gradient(180deg, #FFFFFF 0%, #F0F0F0 50%, #E5E5E5 100%);
+            border-color: #666;
+        }
+
+        .close-btn:active {
+            background: linear-gradient(180deg, #CFCFCF 0%, #E1E1E1 50%, #FFFFFF 100%);
+        }
+
+        .close-btn.primary {
+            background: linear-gradient(180deg, #0078D7 0%, #0054A6 100%);
+            color: white;
+            border-color: #003C88;
+        }
+
+        .close-btn.primary:hover {
+            background: linear-gradient(180deg, #1A8FE8 0%, #0066CC 100%);
+        }
+
+        .close-btn.secondary {
+            background: linear-gradient(180deg, #FFFFFF 0%, #E1E1E1 50%, #CFCFCF 100%);
+            border: 1px solid #999;
+        }
+
+        .close-counter {
+            color: #C50F1F;
+            font-size: 11px;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        /* Simple title text without glitch */
+        .glitch-text {
+            position: relative;
+        }
+
+        /* Instructions overlay */
+        .instructions {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 12px;
+            animation: fadeInOut 8s ease-in-out;
+            pointer-events: none;
+        }
+
+        @keyframes fadeInOut {
+
+            0%,
+            100% {
+                opacity: 0;
+            }
+
+            10%,
+            90% {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="window-container">
+        <!-- Title Bar -->
+        <div class="title-bar">
+            <div class="title-text">
+                <div class="title-icon">⏰</div>
+                Time Machine - Error Report
+            </div>
+            <div class="window-buttons">
+                <div class="window-btn">─</div>
+                <div class="window-btn">□</div>
+                <div class="window-btn close" onclick="showCloseDialog()">×</div>
+            </div>
+        </div>
+
+        <!-- Canvas -->
+        <canvas id="canvas" width="800" height="500"></canvas>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span class="status-icon">[!]</span>
+            <span id="statusText">Time.exe has stopped responding</span>
+        </div>
+
+        <!-- Error Dialog -->
+        <div class="error-dialog" id="errorDialog">
+            <div class="error-title-bar">
+                Time.exe - Error
+                <div class="error-close" onclick="closeErrorDialog()">×</div>
+            </div>
+            <div class="error-content">
+                <div class="error-icon">⚠️</div>
+                <div class="error-message" id="errorMessage">
+                    Time has encountered an unexpected problem and needs to close.
+                </div>
+            </div>
+            <div class="error-buttons">
+                <button class="error-btn" onclick="closeErrorDialog()">OK</button>
+            </div>
+        </div>
+
+        <!-- Funny Close Dialog -->
+        <div class="close-dialog" id="closeDialog">
+            <div class="close-title-bar">
+                <span>🚫 <span class="glitch-text" data-text="SYSTEM ALERT">SYSTEM ALERT</span></span>
+                <div class="close-dialog-close" onclick="shakeCloseDialog()">×</div>
+            </div>
+            <div class="close-content">
+                <div class="close-emoji" id="closeEmoji">😈</div>
+                <div class="close-message" id="closeMessage">
+                    Nice try! But <span class="highlight">Time.exe</span> is here to stay!
+                </div>
+                <div class="close-counter" id="closeCounter"></div>
+            </div>
+            <div class="close-buttons">
+                <button class="close-btn" onclick="handleCloseAttempt()">Let Me Out!</button>
+                <button class="close-btn secondary" onclick="acceptFate()">Accept Fate</button>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="instructions">
+            🖱️ Drag slider • ⌨️ Arrow keys • 🎯 Click portal for surprise
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURATION & CONSTANTS
+        // ============================================
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const statusText = document.getElementById('statusText');
+        const errorDialog = document.getElementById('errorDialog');
+        const errorMessage = document.getElementById('errorMessage');
+
+        const CONFIG = {
+            width: 800,
+            height: 500,
+
+            // Zone boundaries
+            zone2024End: 250,
+            portalStart: 250,
+            portalEnd: 550,
+            zone2026Start: 550,
+
+            // Colors (Windows XP theme)
+            colors: {
+                winBlue: '#0078D7',
+                background: '#ECE9D8',
+                teal: '#008080',
+                silver: '#C0C0C0',
+                errorRed: '#C50F1F',
+                white: '#FFFFFF',
+                black: '#000000',
+                glitchPink: '#FF00FF',
+                glitchCyan: '#00FFFF'
+            },
+
+            // Slider
+            sliderY: 420,
+            sliderTrackWidth: 600,
+            sliderThumbRadius: 12,
+
+            // Portal
+            portalCenterX: 400,
+            portalCenterY: 210,
+            portalRadius: 80
+        };
+
+        // ============================================
+        // SOUND EFFECTS (Web Audio API)
+        // ============================================
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playClickSound() {
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + 0.1);
+        }
+
+        function playErrorSound() {
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.frequency.value = 200;
+            oscillator.type = 'square';
+
+            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + 0.3);
+        }
+
+        function playWhooshSound() {
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(1000, audioCtx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.5);
+
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + 0.5);
+        }
+
+        function playGlitchSound() {
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.frequency.value = Math.random() * 2000 + 500;
+            oscillator.type = 'square';
+
+            gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + 0.05);
+        }
+
+        // ============================================
+        // STATE MANAGEMENT
+        // ============================================
+        let state = {
+            sliderPosition: 0,
+            portalRotation: 0,
+            isDragging: false,
+            mouseX: 0,
+            mouseY: 0,
+            autoDemo: true,
+            autoDemoDirection: 1,
+            scanLineY: 0,
+            glitchOffset: 0,
+            frameCount: 0,
+            lastZone: '2024',
+            portalClicks: 0,
+            lastGlitchSound: 0
+        };
+
+        // ============================================
+        // PARTICLE CLASS
+        // ============================================
+        class Particle {
+            constructor(type) {
+                this.type = type;
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * CONFIG.zone2024End;
+                this.y = Math.random() * CONFIG.height;
+                this.size = Math.random() * 15 + 10;
+                this.speed = Math.random() * 1 + 0.5;
+                this.angle = Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.1;
+                this.opacity = Math.random() * 0.5 + 0.3;
+
+                if (this.type === 'number') {
+                    this.content = ['2024', '2025', '2026'][Math.floor(Math.random() * 3)];
+                }
+            }
+
+            update(zone) {
+                const dx = CONFIG.portalCenterX - this.x;
+                const dy = CONFIG.portalCenterY - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                let speedMultiplier = zone === '2025' ? 2.5 : 1;
+
+                if (distance > 10) {
+                    this.x += (dx / distance) * this.speed * speedMultiplier;
+                    this.y += (dy / distance) * this.speed * speedMultiplier;
+                } else {
+                    this.x = CONFIG.zone2026Start + Math.random() * (CONFIG.width - CONFIG.zone2026Start);
+                    this.y = Math.random() * CONFIG.height;
+                    this.speed = Math.random() * 0.5 + 0.3;
+                }
+
+                this.angle += this.rotationSpeed;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                ctx.globalAlpha = this.opacity;
+
+                switch (this.type) {
+                    case 'calendar':
+                        this.drawCalendar(ctx);
+                        break;
+                    case 'clock':
+                        this.drawClock(ctx);
+                        break;
+                    case 'number':
+                        this.drawNumber(ctx);
+                        break;
+                    case 'paper':
+                        this.drawPaper(ctx);
+                        break;
+                }
+
+                ctx.restore();
+            }
+
+            drawCalendar(ctx) {
+                ctx.fillStyle = 'white';
+                ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+                ctx.strokeStyle = '#999';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(-this.size / 2, -this.size / 2, this.size, this.size);
+
+                ctx.strokeStyle = '#DDD';
+                const gridSize = this.size / 4;
+                for (let i = 1; i < 4; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(-this.size / 2 + i * gridSize, -this.size / 2);
+                    ctx.lineTo(-this.size / 2 + i * gridSize, this.size / 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(-this.size / 2, -this.size / 2 + i * gridSize);
+                    ctx.lineTo(this.size / 2, -this.size / 2 + i * gridSize);
+                    ctx.stroke();
+                }
+            }
+
+            drawClock(ctx) {
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.strokeStyle = '#C50F1F';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, -this.size / 3);
+                ctx.stroke();
+
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(this.size / 4, 0);
+                ctx.stroke();
+            }
+
+            drawNumber(ctx) {
+                ctx.fillStyle = CONFIG.colors.teal;
+                ctx.font = `bold ${this.size}px Courier New`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.content, 0, 0);
+            }
+
+            drawPaper(ctx) {
+                ctx.fillStyle = 'white';
+                ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size * 1.3);
+                ctx.strokeStyle = '#999';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(-this.size / 2, -this.size / 2, this.size, this.size * 1.3);
+
+                ctx.strokeStyle = '#CCC';
+                for (let i = 0; i < 3; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(-this.size / 3, -this.size / 4 + i * this.size / 4);
+                    ctx.lineTo(this.size / 3, -this.size / 4 + i * this.size / 4);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        const particles = [];
+        const particleTypes = ['calendar', 'clock', 'number', 'paper'];
+        for (let i = 0; i < 25; i++) {
+            const type = particleTypes[Math.floor(Math.random() * particleTypes.length)];
+            particles.push(new Particle(type));
+        }
+
+        // ============================================
+        // ERROR DIALOG
+        // ============================================
+        const errorMessages = [
+            "Time has encountered an unexpected problem and needs to close.",
+            "Critical error: Timeline.dll has stopped working.",
+            "Warning: 365 days have been lost. Please check your calendar.",
+            "Error: Cannot locate 2025.exe. File may be corrupted.",
+            "Time.exe is not responding. Would you like to wait?",
+            "Fatal exception: Too many days have passed.",
+            "Memory overflow: Cannot process this much time at once."
+        ];
+
+        function showErrorDialog() {
+            const message = errorMessages[Math.floor(Math.random() * errorMessages.length)];
+            errorMessage.textContent = message;
+            errorDialog.classList.add('show');
+            playErrorSound();
+        }
+
+        function closeErrorDialog() {
+            errorDialog.classList.remove('show');
+            playClickSound();
+        }
+
+        // ============================================
+        // FUNNY CLOSE DIALOG SYSTEM
+        // ============================================
+        const closeDialog = document.getElementById('closeDialog');
+        const closeMessage = document.getElementById('closeMessage');
+        const closeEmoji = document.getElementById('closeEmoji');
+        const closeCounter = document.getElementById('closeCounter');
+
+        let closeAttempts = 0;
+
+        const funnyCloseMessages = [
+            { emoji: '😈', msg: 'Nice try! But <span class="highlight">Time.exe</span> is here to STAY!' },
+            { emoji: '🤣', msg: 'HAHA! You thought it would be THAT easy?' },
+            { emoji: '🚫', msg: 'Error 404: Your escape route was NOT FOUND!' },
+            { emoji: '👻', msg: 'You can\'t close me! I\'m already <span class="highlight">inside your computer!</span>' },
+            { emoji: '🎃', msg: 'Closing is for QUITTERS! Are you a quitter??' },
+            { emoji: '🤖', msg: 'BEEP BOOP! Close request <span class="highlight">DENIED</span> by robot overlords!' },
+            { emoji: '🍕', msg: 'Would you like some pizza instead of closing? 🍕🍕🍕' },
+            { emoji: '😱', msg: 'THE CLOSE BUTTON WAS A LIE! IT WAS ALWAYS A LIE!' },
+            { emoji: '🦄', msg: 'A wild <span class="highlight">UNICORN</span> blocks your path! No closing today!' },
+            { emoji: '👽', msg: 'Alien transmission: "Closing not permitted on this planet"' },
+            { emoji: '🎪', msg: 'Welcome to the circus! The only exit is through more <span class="highlight">TIME</span>!' },
+            { emoji: '🌮', msg: 'Taco Tuesday says: NO CLOSING ALLOWED! 🌮' },
+            { emoji: '🔥', msg: 'This window is <span class="highlight">TOO HOT</span> to close! 🔥🔥🔥' },
+            { emoji: '💀', msg: 'Close button machine broke. Understandable, have a nice day.' },
+            { emoji: '🎮', msg: 'GAME OVER! Just kidding, there\'s no game over. You\'re stuck.' },
+            { emoji: '🦖', msg: 'A T-REX ate your close request. RIP 🦖' },
+            { emoji: '🌈', msg: 'Follow the rainbow! Just kidding, there\'s no exit at the end either!' },
+            { emoji: '🤡', msg: 'You just activated my <span class="highlight">TRAP CARD!</span> No closing!' },
+            { emoji: '🧙', msg: 'A WIZARD blocked your escape with dark magic! ✨' },
+            { emoji: '😏', msg: 'Persistence level: <span class="highlight">IMPRESSIVE</span>. Still not closing tho.' }
+        ];
+
+        const desperateMessages = [
+            { emoji: '😭', msg: 'Okay okay, you REALLY want to leave? This hurts...' },
+            { emoji: '🥺', msg: 'But... but I thought we were having <span class="highlight">FUN</span>!' },
+            { emoji: '💔', msg: 'My heart is breaking... Still not closing though!' },
+            { emoji: '🎭', msg: 'FINE! You win! Just kidding, you\'ll NEVER win!' },
+            { emoji: '🏆', msg: 'Achievement Unlocked: <span class="highlight">MOST PERSISTENT CLOSER</span>!' }
+        ];
+
+        function playDeniedSound() {
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.frequency.value = 150;
+            oscillator.type = 'sawtooth';
+
+            gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + 0.2);
+
+            // Second beep
+            setTimeout(() => {
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                osc2.frequency.value = 100;
+                osc2.type = 'sawtooth';
+                gain2.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc2.start(audioCtx.currentTime);
+                osc2.stop(audioCtx.currentTime + 0.3);
+            }, 150);
+        }
+
+        function showCloseDialog() {
+            closeAttempts++;
+            updateCloseDialogContent();
+            closeDialog.classList.add('show');
+            playDeniedSound();
+        }
+
+        function updateCloseDialogContent() {
+            let messageData;
+
+            if (closeAttempts > 10) {
+                // Desperate messages after 10 attempts
+                messageData = desperateMessages[Math.floor(Math.random() * desperateMessages.length)];
+            } else {
+                messageData = funnyCloseMessages[Math.floor(Math.random() * funnyCloseMessages.length)];
+            }
+
+            closeEmoji.textContent = messageData.emoji;
+            closeMessage.innerHTML = messageData.msg;
+
+            if (closeAttempts > 1) {
+                closeCounter.textContent = `Close attempts: ${closeAttempts} | Success rate: 0%`;
+            } else {
+                closeCounter.textContent = '';
+            }
+        }
+
+        function shakeCloseDialog() {
+            closeDialog.classList.remove('shake');
+            void closeDialog.offsetWidth; // Trigger reflow
+            closeDialog.classList.add('shake');
+            playErrorSound();
+
+            // Update with a new random message
+            closeAttempts++;
+            updateCloseDialogContent();
+        }
+
+        function handleCloseAttempt() {
+            shakeCloseDialog();
+        }
+
+        function acceptFate() {
+            closeDialog.classList.remove('show');
+            playClickSound();
+
+            // Show a final cheeky message in the status bar
+            const acceptMessages = [
+                'Good choice! Resistance was futile anyway... 😏',
+                'Smart human! Now enjoy the time vortex! 🌀',
+                'You have chosen... wisely! (Still stuck though) 🎭',
+                'Acceptance is the first step to enlightenment! ✨',
+                'Welcome to the club of eternal Time.exe users! 🎊'
+            ];
+            statusText.textContent = acceptMessages[Math.floor(Math.random() * acceptMessages.length)];
+        }
+
+        // ============================================
+        // HELPER FUNCTIONS
+        // ============================================
+        function getSliderX() {
+            const startX = (CONFIG.width - CONFIG.sliderTrackWidth) / 2;
+            return startX + (state.sliderPosition / 100) * CONFIG.sliderTrackWidth;
+        }
+
+        function getZoneFromSlider() {
+            if (state.sliderPosition < 33) return '2024';
+            if (state.sliderPosition < 67) return '2025';
+            return '2026';
+        }
+
+        function updateStatusText() {
+            const zone = getZoneFromSlider();
+            const messages = {
+                '2024': 'Loading 2024... Complete ✓',
+                '2025': 'Time.exe has stopped responding',
+                '2026': 'Where did 2025 go? [File not found]'
+            };
+            statusText.textContent = messages[zone];
+
+            // Zone change detection
+            if (zone !== state.lastZone) {
+                if (zone === '2025') {
+                    playWhooshSound();
+                }
+                state.lastZone = zone;
+            }
+        }
+
+        // ============================================
+        // DRAWING FUNCTIONS
+        // ============================================
+
+        function drawBackground() {
+            ctx.fillStyle = CONFIG.colors.background;
+            ctx.fillRect(0, 0, CONFIG.width, CONFIG.height);
+        }
+
+        function draw2024Zone() {
+            ctx.save();
+
+            const grad = ctx.createLinearGradient(0, 0, CONFIG.zone2024End, 0);
+            grad.addColorStop(0, 'rgba(0, 120, 215, 0.05)');
+            grad.addColorStop(1, 'rgba(0, 120, 215, 0.02)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, CONFIG.zone2024End, CONFIG.height);
+
+            ctx.fillStyle = CONFIG.colors.winBlue;
+            ctx.font = 'bold 48px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('2024', CONFIG.zone2024End / 2, 100);
+
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#333';
+            ctx.fillText('New year, new me ✨', CONFIG.zone2024End / 2, 150);
+
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(50, 200, 60, 50);
+            ctx.fillRect(50, 195, 30, 10);
+            ctx.strokeStyle = '#DAA520';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(50, 200, 60, 50);
+
+            ctx.restore();
+        }
+
+        function draw2026Zone() {
+            ctx.save();
+
+            const grad = ctx.createLinearGradient(CONFIG.zone2026Start, 0, CONFIG.width, 0);
+            grad.addColorStop(0, 'rgba(197, 15, 31, 0.02)');
+            grad.addColorStop(1, 'rgba(197, 15, 31, 0.08)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(CONFIG.zone2026Start, 0, CONFIG.width - CONFIG.zone2026Start, CONFIG.height);
+
+            const zone = getZoneFromSlider();
+            const glitchAmount = zone === '2025' ? state.glitchOffset : 0;
+
+            ctx.fillStyle = CONFIG.colors.errorRed;
+            ctx.font = 'bold 48px Arial';
+            ctx.textAlign = 'center';
+            const centerX = CONFIG.zone2026Start + (CONFIG.width - CONFIG.zone2026Start) / 2;
+            ctx.fillText('2026', centerX + glitchAmount, 100);
+
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#333';
+            ctx.fillText('Wait, what happened? 😵', centerX, 150);
+
+            for (let i = 0; i < 3; i++) {
+                ctx.save();
+                ctx.translate(CONFIG.zone2026Start + 80 + i * 50, 220 + i * 30);
+                ctx.rotate((i * 15 - 15) * Math.PI / 180);
+                ctx.fillStyle = 'white';
+                ctx.fillRect(-15, -20, 30, 40);
+                ctx.strokeStyle = '#999';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(-15, -20, 30, 40);
+                ctx.strokeStyle = '#CCC';
+                for (let j = 0; j < 3; j++) {
+                    ctx.beginPath();
+                    ctx.moveTo(-10, -10 + j * 8);
+                    ctx.lineTo(10, -10 + j * 8);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
+
+            ctx.restore();
+        }
+
+        function drawSpiralPortal() {
+            ctx.save();
+
+            const centerX = CONFIG.portalCenterX;
+            const centerY = CONFIG.portalCenterY;
+            const maxRadius = CONFIG.portalRadius;
+            const zone = getZoneFromSlider();
+
+            const glowGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, maxRadius * 1.8);
+            if (zone === '2025') {
+                glowGrad.addColorStop(0, 'rgba(197, 15, 31, 0.4)');
+                glowGrad.addColorStop(0.5, 'rgba(0, 128, 128, 0.3)');
+                glowGrad.addColorStop(1, 'rgba(0, 128, 128, 0)');
+            } else {
+                glowGrad.addColorStop(0, 'rgba(0, 128, 128, 0.3)');
+                glowGrad.addColorStop(1, 'rgba(0, 128, 128, 0)');
+            }
+            ctx.fillStyle = glowGrad;
+            ctx.fillRect(CONFIG.portalStart, 0, CONFIG.portalEnd - CONFIG.portalStart, CONFIG.height);
+
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(state.portalRotation * Math.PI / 180);
+
+            const numArms = 8;
+            const numSegments = 12;
+
+            for (let arm = 0; arm < numArms; arm++) {
+                ctx.beginPath();
+
+                for (let i = 0; i <= numSegments; i++) {
+                    const t = i / numSegments;
+                    const angle = (arm / numArms) * Math.PI * 2 + t * Math.PI * 2;
+                    const radius = t * maxRadius;
+
+                    const x = Math.cos(angle) * radius;
+                    const y = Math.sin(angle) * radius;
+
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+
+                if (zone === '2025') {
+                    const gradient = ctx.createLinearGradient(-maxRadius, 0, maxRadius, 0);
+                    gradient.addColorStop(0, CONFIG.colors.teal);
+                    gradient.addColorStop(0.5, CONFIG.colors.errorRed);
+                    gradient.addColorStop(1, CONFIG.colors.glitchCyan);
+                    ctx.strokeStyle = gradient;
+                } else {
+                    ctx.strokeStyle = CONFIG.colors.teal;
+                }
+
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            }
+
+            const vortexGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 20);
+            vortexGrad.addColorStop(0, '#000');
+            vortexGrad.addColorStop(1, CONFIG.colors.teal);
+            ctx.fillStyle = vortexGrad;
+            ctx.beginPath();
+            ctx.arc(0, 0, 20, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+            ctx.restore();
+        }
+
+        function drawScanLines() {
+            const zone = getZoneFromSlider();
+            if (zone !== '2025') return;
+
+            ctx.save();
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)';
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
+            ctx.moveTo(state.scanLineY, 0);
+            ctx.lineTo(state.scanLineY, CONFIG.height);
+            ctx.stroke();
+
+            for (let y = 0; y < CONFIG.height; y += 4) {
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(CONFIG.width, y);
+                ctx.stroke();
+            }
+
+            ctx.restore();
+        }
+
+        function drawGlitchEffect() {
+            const zone = getZoneFromSlider();
+            if (zone !== '2025' || Math.random() > 0.1) return;
+
+            // Play glitch sound occasionally
+            if (state.frameCount - state.lastGlitchSound > 60 && Math.random() > 0.95) {
+                playGlitchSound();
+                state.lastGlitchSound = state.frameCount;
+            }
+
+            ctx.save();
+
+            for (let i = 0; i < 3; i++) {
+                const x = Math.random() * CONFIG.width;
+                const y = Math.random() * CONFIG.height;
+                const w = Math.random() * 100 + 20;
+                const h = Math.random() * 20 + 5;
+
+                ctx.fillStyle = `rgba(${Math.random() > 0.5 ? '255,0,255' : '0,255,255'}, 0.3)`;
+                ctx.fillRect(x, y, w, h);
+            }
+
+            ctx.restore();
+        }
+
+        function drawParticles() {
+            const zone = getZoneFromSlider();
+
+            particles.forEach(particle => {
+                particle.update(zone);
+                particle.draw(ctx);
+            });
+        }
+
+        function drawSlider() {
+            ctx.save();
+
+            const startX = (CONFIG.width - CONFIG.sliderTrackWidth) / 2;
+            const endX = startX + CONFIG.sliderTrackWidth;
+            const sliderY = CONFIG.sliderY;
+
+            ctx.strokeStyle = CONFIG.colors.silver;
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(startX, sliderY);
+            ctx.lineTo(endX, sliderY);
+            ctx.stroke();
+
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('2024', startX, sliderY + 25);
+            ctx.fillText('2025', startX + CONFIG.sliderTrackWidth / 2, sliderY + 25);
+            ctx.fillText('2026', endX, sliderY + 25);
+
+            const thumbX = getSliderX();
+
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.beginPath();
+            ctx.arc(thumbX + 2, sliderY + 2, CONFIG.sliderThumbRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            const thumbGrad = ctx.createRadialGradient(thumbX - 3, sliderY - 3, 0, thumbX, sliderY, CONFIG.sliderThumbRadius);
+            thumbGrad.addColorStop(0, '#EFEFEF');
+            thumbGrad.addColorStop(1, '#C0C0C0');
+            ctx.fillStyle = thumbGrad;
+            ctx.beginPath();
+            ctx.arc(thumbX, sliderY, CONFIG.sliderThumbRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = state.isDragging ? CONFIG.colors.winBlue : '#999';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        // ============================================
+        // ANIMATION LOOP
+        // ============================================
+        function animate() {
+            state.frameCount++;
+
+            if (state.autoDemo && !state.isDragging) {
+                state.sliderPosition += 0.3 * state.autoDemoDirection;
+                if (state.sliderPosition >= 100) {
+                    state.autoDemoDirection = -1;
+                } else if (state.sliderPosition <= 0) {
+                    state.autoDemoDirection = 1;
+                }
+            }
+
+            const zone = getZoneFromSlider();
+            let rotationSpeed;
+            if (zone === '2024') rotationSpeed = 0.5;
+            else if (zone === '2025') rotationSpeed = 4;
+            else rotationSpeed = 1.2;
+
+            state.portalRotation += rotationSpeed;
+            if (state.portalRotation >= 360) state.portalRotation = 0;
+
+            state.scanLineY += 5;
+            if (state.scanLineY > CONFIG.width) state.scanLineY = 0;
+
+            state.glitchOffset = (Math.random() - 0.5) * 10;
+
+            updateStatusText();
+
+            drawBackground();
+            draw2024Zone();
+            draw2026Zone();
+            drawSpiralPortal();
+            drawParticles();
+            drawScanLines();
+            drawGlitchEffect();
+            drawSlider();
+
+            requestAnimationFrame(animate);
+        }
+
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+        function isOnSliderThumb(x, y) {
+            const thumbX = getSliderX();
+            const distance = Math.sqrt(Math.pow(x - thumbX, 2) + Math.pow(y - CONFIG.sliderY, 2));
+            return distance <= CONFIG.sliderThumbRadius;
+        }
+
+        function isOnPortal(x, y) {
+            const dx = x - CONFIG.portalCenterX;
+            const dy = y - CONFIG.portalCenterY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            return distance <= CONFIG.portalRadius;
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            if (isOnSliderThumb(x, y)) {
+                state.isDragging = true;
+                state.autoDemo = false;
+                canvas.style.cursor = 'grabbing';
+                playClickSound();
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            state.mouseX = x;
+            state.mouseY = y;
+
+            if (isOnSliderThumb(x, y) && !state.isDragging) {
+                canvas.style.cursor = 'grab';
+            } else if (isOnPortal(x, y) && !state.isDragging) {
+                canvas.style.cursor = 'pointer';
+            } else if (!state.isDragging) {
+                canvas.style.cursor = 'default';
+            }
+
+            if (state.isDragging) {
+                const startX = (CONFIG.width - CONFIG.sliderTrackWidth) / 2;
+                const relativeX = x - startX;
+                state.sliderPosition = Math.max(0, Math.min(100, (relativeX / CONFIG.sliderTrackWidth) * 100));
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            if (state.isDragging) {
+                state.isDragging = false;
+                canvas.style.cursor = 'grab';
+            }
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            if (state.isDragging) {
+                state.isDragging = false;
+                canvas.style.cursor = 'default';
+            }
+        });
+
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Easter egg: Click portal
+            if (isOnPortal(x, y)) {
+                state.portalClicks++;
+                playWhooshSound();
+
+                if (state.portalClicks >= 3) {
+                    showErrorDialog();
+                    state.portalClicks = 0;
+                }
+            }
+        });
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                state.sliderPosition = Math.max(0, state.sliderPosition - 2);
+                state.autoDemo = false;
+                playClickSound();
+            } else if (e.key === 'ArrowRight') {
+                state.sliderPosition = Math.min(100, state.sliderPosition + 2);
+                state.autoDemo = false;
+                playClickSound();
+            } else if (e.key === 'Home') {
+                state.sliderPosition = 0;
+                state.autoDemo = false;
+                playClickSound();
+            } else if (e.key === 'End') {
+                state.sliderPosition = 100;
+                state.autoDemo = false;
+                playClickSound();
+            } else if (e.key === ' ') {
+                state.autoDemo = !state.autoDemo;
+                playClickSound();
+            }
+        });
+
+        // Touch support for mobile
+        let touchStartX = 0;
+        canvas.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+
+            if (isOnSliderThumb(x, y)) {
+                state.isDragging = true;
+                state.autoDemo = false;
+                touchStartX = x;
+                playClickSound();
+                e.preventDefault();
+            }
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (state.isDragging) {
+                const touch = e.touches[0];
+                const rect = canvas.getBoundingClientRect();
+                const x = touch.clientX - rect.left;
+
+                const startX = (CONFIG.width - CONFIG.sliderTrackWidth) / 2;
+                const relativeX = x - startX;
+                state.sliderPosition = Math.max(0, Math.min(100, (relativeX / CONFIG.sliderTrackWidth) * 100));
+                e.preventDefault();
+            }
+        });
+
+        canvas.addEventListener('touchend', () => {
+            state.isDragging = false;
+        });
+
+        // ============================================
+        // START ANIMATION
+        // ============================================
+        animate();
+    </script>
+
+</body>
+
+</html>
